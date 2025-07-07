@@ -402,6 +402,21 @@ class VerifyHandler:
             
             # Store the participation message ID for tracking with unique post ID
             try:
+                # Also create a separate entry in participants collection for each unique post
+                participant_entry = {
+                    "vote_id": vote_data["_id"],
+                    "user_id": user_data["user_id"],
+                    "channel_username": channel_username,
+                    "unique_post_id": unique_participant_id,
+                    "channel_message_id": sent_message.message_id,
+                    "channel_chat_id": channel_username,
+                    "post_vote_count": 0,  # Individual vote count for this specific post
+                    "created_at": datetime.now()
+                }
+                await self.db.db[Config.PARTICIPANTS_COLLECTION].insert_one(participant_entry)
+                print(f"DEBUG: Participant entry created with unique_post_id: {unique_participant_id}")
+                
+                # Also update the original vote entry
                 await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
                     {
                         "vote_id": vote_data["_id"],
