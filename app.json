@@ -1,0 +1,78 @@
+
+{
+  "name": "Telegram Vote Bot",
+  "description": "A Telegram bot for creating vote polls with subscription verification",
+  "repository": "https://github.com/yourusername/telegram-vote-bot",
+  "logo": "https://telegram.org/img/t_logo.png",
+  "keywords": [
+    "telegram",
+    "bot",
+    "vote",
+    "poll",
+    "python",
+    "pyrogram"
+  ],
+  "stack": "heroku-22",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "API_ID": {
+      "description": "Your Telegram API ID from my.telegram.org",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Your Telegram API Hash from my.telegram.org",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Your bot token from @BotFather",
+      "required": true
+    },
+    "OWNER_USERNAME": {
+      "description": "Your Telegram username with @",
+      "value": "@INNOCENT_FUCKER"
+    },
+    "SUPPORT_CHANNEL": {
+      "description": "Support channel username with @",
+      "value": "@Komal_Music_Support"
+    },
+    "UPDATE_CHANNEL": {
+      "description": "Update channel username with @",
+      "value": "@KomalMusicUpdate"
+    },
+    "BOT_USERNAME": {
+      "description": "Your bot username without @",
+      "required": true
+    },
+    "MONGO_DB_URI": {
+      "description": "MongoDB connection URI (optional)",
+      "required": false
+    },
+    "DATABASE_NAME": {
+      "description": "Database name",
+      "value": "votebot"
+    },
+    "SUBSCRIPTION_CHECK_INTERVAL": {
+      "description": "Subscription check interval in minutes",
+      "value": "5"
+    },
+    "LOG_CHANNEL_ID": {
+      "description": "Log channel ID (optional)",
+      "required": false
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "addons": [
+    {
+      "plan": "mongolab:sandbox"
+    }
+  ]
+}
