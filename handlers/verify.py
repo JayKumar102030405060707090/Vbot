@@ -72,46 +72,35 @@ class VerifyHandler:
                     is_subscribed = await self.app.get_chat_member(channel_username, voter_id)
                     if is_subscribed.status in ["creator", "administrator", "member"]:
                         
-                        # Check if user has already voted for this specific participant
-                        existing_vote = await self.db.db["user_votes"].find_one({
+                        # Allow unlimited votes for any participant (removed restriction)
+                        await query.answer("✅ Vote counted! Thank you for voting.", show_alert=True)
+                        
+                        # Record the vote (allow multiple votes)
+                        await self.db.db["user_votes"].insert_one({
                             "voter_id": voter_id,
                             "participant_user_id": participant_user_id,
-                            "channel_username": channel_username
+                            "channel_username": channel_username,
+                            "vote_timestamp": datetime.now()
                         })
                         
-                        if existing_vote:
-                            # User has already voted for this participant
-                            await query.answer("❌ You have already voted for this participant!", show_alert=True)
-                        else:
-                            # Allow vote - first time voting for this participant
-                            await query.answer("✅ Vote counted! Thank you for voting.", show_alert=True)
+                        # Update vote count in database
+                        await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
+                            {"channel_username": channel_username, "user_id": participant_user_id},
+                            {"$inc": {"vote_count": 1}}
+                        )
+                        
+                        # Update button text with new count
+                        participant_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
+                            {"channel_username": channel_username, "user_id": participant_user_id}
+                        )
+                        if participant_data:
+                            new_count = participant_data.get("vote_count", 1)
+                            emoji = "⚡"
+                            updated_button = InlineKeyboardMarkup([
+                                [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{participant_user_id}")]
+                            ])
                             
-                            # Record the vote to prevent duplicate voting
-                            await self.db.db["user_votes"].insert_one({
-                                "voter_id": voter_id,
-                                "participant_user_id": participant_user_id,
-                                "channel_username": channel_username,
-                                "vote_timestamp": datetime.now()
-                            })
-                            
-                            # Update vote count in database
-                            await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
-                                {"channel_username": channel_username, "user_id": participant_user_id},
-                                {"$inc": {"vote_count": 1}}
-                            )
-                            
-                            # Update button text with new count
-                            participant_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
-                                {"channel_username": channel_username, "user_id": participant_user_id}
-                            )
-                            if participant_data:
-                                new_count = participant_data.get("vote_count", 1)
-                                emoji = "⚡"
-                                updated_button = InlineKeyboardMarkup([
-                                    [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{participant_user_id}")]
-                                ])
-                                
-                                await query.edit_message_reply_markup(reply_markup=updated_button)
+                            await query.edit_message_reply_markup(reply_markup=updated_button)
                     else:
                         # Not subscribed
                         await query.answer("❌ You must be subscribed to this channel to vote!", show_alert=True)

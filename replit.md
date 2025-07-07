@@ -200,6 +200,12 @@ Changelog:
   - Removed all vote poll restrictions - channels can now have unlimited vote polls
   - Removed participation restrictions - users can now participate unlimited times
   - Bot ready for production use with enhanced flexibility
+- July 7, 2025: Fixed Duplicate Vote Prevention Issue
+  - Removed duplicate vote check from channel vote button handler
+  - Users can now vote unlimited times for any participant (including themselves)
+  - Fixed indentation errors in handlers/verify.py
+  - Channel voting system now allows complete voting freedom
+  - Bot fully operational with no voting restrictions
 ```
 
 ## User Preferences
