@@ -363,17 +363,17 @@ class VerifyHandler:
             username_display = f"@{user_data['username']}" if user_data.get("username") else "#INNOCENT_FUCKER"
             
             # Create participation message for channel
-            participation_message = f"""**[ ⚡ ] PARTICIPANT DETAILS [ ⚡ ]**
+            participation_message = f"""**❖ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛ ᴅᴇᴛᴀɪʟs ❖**
 
-▶ **USER:** °•🔱•(🌀)**{display_name}**🔱•°
+**▶ ᴜsᴇʀ:** °•🔱•(🌀)**{display_name}**🔱•°
 •••••• **{username_display}**
 
-▶ **USER-ID:** {user_data['user_id']}
-▶ **USERNAME:** {username_display}
+**▶ ᴜsᴇʀ-ɪᴅ:** {user_data['user_id']}
+**▶ ᴜsᴇʀɴᴀᴍᴇ:** {username_display}
 
-**NOTE: ONLY CHANNEL SUBSCRIBERS CAN VOTE.**
+**❖ ɴᴏᴛᴇ: ᴏɴʟʏ ᴄʜᴀɴɴᴇʟ sᴜʙsᴄʀɪʙᴇʀs ᴄᴀɴ ᴠᴏᴛᴇ ❖**
 
-**×× CREATED BY - [VOTE BOT](https://t.me/BotNations)**"""
+**×× ᴄʀᴇᴀᴛᴇᴅ ʙʏ - [ᴠᴏᴛᴇ ʙᴏᴛ](https://t.me/BotNations)**"""
             
             # Post to channel using channel username
             channel_username = vote_data.get("channel_username", "")
