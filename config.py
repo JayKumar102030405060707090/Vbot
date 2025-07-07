@@ -35,34 +35,34 @@ class Config:
     
     # Messages
     START_MESSAGE = """
-🤖 **Welcome to Vote Bot!**
+**❖ ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴠᴏᴛᴇ ʙᴏᴛ!**
 
-» To create auto vote creator for your channel, use /vote command.
-‣ Vote-Poll - Giveaway
+**» ᴛᴏ ᴄʀᴇᴀᴛᴇ ᴀᴜᴛᴏ ᴠᴏᴛᴇ ᴄʀᴇᴀᴛᴏʀ ғᴏʀ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ, ᴜsᴇ /vote ᴄᴏᴍᴍᴀɴᴅ.**
+**‣ ᴠᴏᴛᴇ-ᴘᴏʟʟ - ɢɪᴠᴇᴀᴡᴀʏ**
 
-If you need any help, then DM to my owner ( {owner} ).
+**❖ ɪғ ʏᴏᴜ ɴᴇᴇᴅ ᴀɴʏ ʜᴇʟᴘ, ᴛʜᴇɴ ᴅᴍ ᴛᴏ ᴍʏ ᴏᴡɴᴇʀ ( {owner} ) ❖**
 
-**Available Commands:**
-• /vote - Create a vote poll for your channel
-• /help - Show this help message
-• /stats - Show bot statistics (Admin only)
+**❖ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:**
+**• /vote - ᴄʀᴇᴀᴛᴇ ᴀ ᴠᴏᴛᴇ ᴘᴏʟʟ ғᴏʀ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ**
+**• /help - sʜᴏᴡ ᴛʜɪs ʜᴇʟᴘ ᴍᴇssᴀɢᴇ**
+**• /stats - sʜᴏᴡ ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs (ᴀᴅᴍɪɴ ᴏɴʟʏ)**
 """
     
     HELP_MESSAGE = """
-🔰 **Vote Bot Help**
+**❖ ᴠᴏᴛᴇ ʙᴏᴛ ʜᴇʟᴘ ❖**
 
-**How to use:**
-1. Add me to your channel as admin
-2. Use /vote command
-3. Send your channel username with @
-4. Share the participation link with your audience
+**❖ ʜᴏᴡ ᴛᴏ ᴜsᴇ:**
+**1. ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴀs ᴀᴅᴍɪɴ**
+**2. ᴜsᴇ /vote ᴄᴏᴍᴍᴀɴᴅ**
+**3. sᴇɴᴅ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀɴᴀᴍᴇ ᴡɪᴛʜ @**
+**4. sʜᴀʀᴇ ᴛʜᴇ ᴘᴀʀᴛɪᴄɪᴘᴀᴛɪᴏɴ ʟɪɴᴋ ᴡɪᴛʜ ʏᴏᴜʀ ᴀᴜᴅɪᴇɴᴄᴇ**
 
-**Commands:**
-• /vote - Create vote poll
-• /help - Show help
-• /stats - Bot statistics (Admin only)
+**❖ ᴄᴏᴍᴍᴀɴᴅs:**
+**• /vote - ᴄʀᴇᴀᴛᴇ ᴠᴏᴛᴇ ᴘᴏʟʟ**
+**• /help - sʜᴏᴡ ʜᴇʟᴘ**
+**• /stats - ʙᴏᴛ sᴛᴀᴛɪsᴛɪᴄs (ᴀᴅᴍɪɴ ᴏɴʟʏ)**
 
-**Need Support?** Contact: {owner}
+**❖ ɴᴇᴇᴅ sᴜᴘᴘᴏʀᴛ?** ᴄᴏɴᴛᴀᴄᴛ: {owner}
 """
     
     @classmethod
