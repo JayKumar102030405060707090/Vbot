@@ -107,18 +107,18 @@ class VerifyHandler:
                             await self.db.db["user_votes"].insert_one(vote_record)
                             print(f"DEBUG: Vote recorded: {vote_record}")
                             
-                            # Update vote count in database
+                            # Update vote count for this specific post
                             await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
-                                {"channel_username": channel_username, "user_id": participant_user_id},
-                                {"$inc": {"vote_count": 1}}
+                                {"channel_username": channel_username, "unique_post_id": unique_post_id},
+                                {"$inc": {"post_vote_count": 1}}
                             )
                             
-                            # Update button text with new count
+                            # Update button text with new count for this specific post
                             participant_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
-                                {"channel_username": channel_username, "user_id": participant_user_id}
+                                {"channel_username": channel_username, "unique_post_id": unique_post_id}
                             )
                             if participant_data:
-                                new_count = participant_data.get("vote_count", 1)
+                                new_count = participant_data.get("post_vote_count", 1)
                                 emoji = "⚡"
                                 updated_button = InlineKeyboardMarkup([
                                     [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{unique_post_id}")]
@@ -381,7 +381,7 @@ class VerifyHandler:
             print(f"DEBUG: Message posted successfully to channel {channel_username}")
             print(f"DEBUG: Message ID: {sent_message.message_id}")
             
-            # Store the participation message ID for tracking (simplified)
+            # Store the participation message ID for tracking with unique post ID
             try:
                 await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
                     {
@@ -391,7 +391,9 @@ class VerifyHandler:
                     {
                         "$set": {
                             "channel_message_id": sent_message.message_id,
-                            "channel_chat_id": channel_username
+                            "channel_chat_id": channel_username,
+                            "unique_post_id": unique_participant_id,
+                            "post_vote_count": 0  # Individual vote count for this specific post
                         }
                     }
                 )
