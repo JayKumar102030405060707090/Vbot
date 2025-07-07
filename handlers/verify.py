@@ -57,12 +57,18 @@ class VerifyHandler:
         async def handle_channel_vote_button(client: Client, query: CallbackQuery):
             """Handle channel vote button clicks"""
             try:
-                # Extract channel and user_id from callback data
-                # Format: channel_vote_CHANNELNAME_USERID
+                # Extract channel and unique participant ID from callback data
+                # Format: channel_vote_CHANNELNAME_USERID_TIMESTAMP
                 callback_parts = query.data.split("_")
                 if len(callback_parts) >= 4:
                     channel_name = callback_parts[2]
-                    participant_user_id = int(callback_parts[3])
+                    # Handle both old format (just user_id) and new format (user_id_timestamp)
+                    if len(callback_parts) >= 5:
+                        participant_user_id = int(callback_parts[3])
+                        unique_post_id = f"{callback_parts[3]}_{callback_parts[4]}"
+                    else:
+                        participant_user_id = int(callback_parts[3])
+                        unique_post_id = callback_parts[3]  # fallback for old posts
                     
                     # Check if voter is subscribed to the channel
                     voter_id = query.from_user.id
@@ -72,28 +78,29 @@ class VerifyHandler:
                     is_subscribed = await self.app.get_chat_member(channel_username, voter_id)
                     if is_subscribed.status in ["creator", "administrator", "member"]:
                         
-                        # Check if user has already voted for this specific participant
-                        print(f"DEBUG: Checking vote - Voter: {voter_id}, Participant: {participant_user_id}, Channel: {channel_username}")
+                        # Check if user has already voted for this specific participant post
+                        print(f"DEBUG: Checking vote - Voter: {voter_id}, Participant: {participant_user_id}, Post ID: {unique_post_id}, Channel: {channel_username}")
                         existing_vote = await self.db.db["user_votes"].find_one({
                             "voter_id": voter_id,
-                            "participant_user_id": participant_user_id,
+                            "unique_post_id": unique_post_id,
                             "channel_username": channel_username
                         })
                         print(f"DEBUG: Existing vote found: {existing_vote}")
                         
                         if existing_vote:
-                            # User has already voted for this specific participant
-                            print(f"DEBUG: Duplicate vote prevented for voter {voter_id} on participant {participant_user_id}")
+                            # User has already voted for this specific participant post
+                            print(f"DEBUG: Duplicate vote prevented for voter {voter_id} on post {unique_post_id}")
                             await query.answer("❌ You have already voted for this participant!", show_alert=True)
                         else:
-                            # Allow vote - first time voting for this specific participant
-                            print(f"DEBUG: Allowing vote for voter {voter_id} on participant {participant_user_id}")
+                            # Allow vote - first time voting for this specific participant post
+                            print(f"DEBUG: Allowing vote for voter {voter_id} on post {unique_post_id}")
                             await query.answer("✅ Vote counted! Thank you for voting.", show_alert=True)
                             
-                            # Record the vote to prevent duplicate voting for same participant
+                            # Record the vote to prevent duplicate voting for same participant post
                             vote_record = {
                                 "voter_id": voter_id,
                                 "participant_user_id": participant_user_id,
+                                "unique_post_id": unique_post_id,
                                 "channel_username": channel_username,
                                 "vote_timestamp": datetime.now()
                             }
@@ -114,7 +121,7 @@ class VerifyHandler:
                                 new_count = participant_data.get("vote_count", 1)
                                 emoji = "⚡"
                                 updated_button = InlineKeyboardMarkup([
-                                    [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{participant_user_id}")]
+                                    [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{unique_post_id}")]
                                 ])
                                 
                                 await query.edit_message_reply_markup(reply_markup=updated_button)
@@ -356,10 +363,11 @@ class VerifyHandler:
             # Create inline voting button for channel subscribers
             from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
             
-            # Create vote button with current count
+            # Create vote button with current count - use timestamp to make unique identifier
             emoji = vote_data.get("emoji", "⚡")
+            unique_participant_id = f"{user_data['user_id']}_{int(datetime.now().timestamp())}"
             vote_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"{emoji} Vote for this participant", callback_data=f"channel_vote_{channel_username[1:]}_{user_data['user_id']}")]
+                [InlineKeyboardButton(f"{emoji} Vote for this participant", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
             ])
             
             # Send message to channel with voting button
