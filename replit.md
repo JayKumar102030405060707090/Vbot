@@ -200,12 +200,13 @@ Changelog:
   - Removed all vote poll restrictions - channels can now have unlimited vote polls
   - Removed participation restrictions - users can now participate unlimited times
   - Bot ready for production use with enhanced flexibility
-- July 7, 2025: Fixed Duplicate Vote Prevention Issue
-  - Removed duplicate vote check from channel vote button handler
-  - Users can now vote unlimited times for any participant (including themselves)
-  - Fixed indentation errors in handlers/verify.py
-  - Channel voting system now allows complete voting freedom
-  - Bot fully operational with no voting restrictions
+- July 7, 2025: Implemented Correct Vote Logic Per User Requirements
+  - Restored proper duplicate vote prevention for same participant
+  - Users can vote only once per specific participant post
+  - Same user can participate multiple times and get votes on each participation
+  - Example: Ajay participates twice → creates 2 posts → users can vote on both posts
+  - But each user can vote only once per specific participant post
+  - Perfect voting system: no duplicate votes per participant, but multiple participations allowed
 ```
 
 ## User Preferences
