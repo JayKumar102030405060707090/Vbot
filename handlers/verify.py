@@ -382,9 +382,10 @@ class VerifyHandler:
             # Create inline voting button for channel subscribers
             from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
             
-            # Create vote button with current count - use timestamp to make unique identifier
+            # Create vote button with current count - use timestamp with microseconds to make truly unique identifier
             emoji = vote_data.get("emoji", "⚡")
-            unique_participant_id = f"{user_data['user_id']}_{int(datetime.now().timestamp())}"
+            import time
+            unique_participant_id = f"{user_data['user_id']}_{int(time.time() * 1000000)}"  # Microsecond precision
             vote_button = InlineKeyboardMarkup([
                 [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
             ])
