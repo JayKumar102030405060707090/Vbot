@@ -17,7 +17,7 @@ class Config:
     
     # Database configuration
     MONGO_DB_URI = os.getenv("MONGO_DB_URI", "mongodb+srv://jaydipmore74:xCpTm5OPAfRKYnif@cluster0.5jo18.mongodb.net/?retryWrites=true&w=majority")
-    DATABASE_NAME = os.getenv("DATABASE_NAME", "votebot")
+    DATABASE_NAME = os.getenv("DATABASE_NAME", "Nottyvotebot")
     
     # Collections
     VOTES_COLLECTION = "votes"
