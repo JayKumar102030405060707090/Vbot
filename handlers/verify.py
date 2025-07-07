@@ -73,26 +73,32 @@ class VerifyHandler:
                     if is_subscribed.status in ["creator", "administrator", "member"]:
                         
                         # Check if user has already voted for this specific participant
+                        print(f"DEBUG: Checking vote - Voter: {voter_id}, Participant: {participant_user_id}, Channel: {channel_username}")
                         existing_vote = await self.db.db["user_votes"].find_one({
                             "voter_id": voter_id,
                             "participant_user_id": participant_user_id,
                             "channel_username": channel_username
                         })
+                        print(f"DEBUG: Existing vote found: {existing_vote}")
                         
                         if existing_vote:
                             # User has already voted for this specific participant
+                            print(f"DEBUG: Duplicate vote prevented for voter {voter_id} on participant {participant_user_id}")
                             await query.answer("❌ You have already voted for this participant!", show_alert=True)
                         else:
                             # Allow vote - first time voting for this specific participant
+                            print(f"DEBUG: Allowing vote for voter {voter_id} on participant {participant_user_id}")
                             await query.answer("✅ Vote counted! Thank you for voting.", show_alert=True)
                             
                             # Record the vote to prevent duplicate voting for same participant
-                            await self.db.db["user_votes"].insert_one({
+                            vote_record = {
                                 "voter_id": voter_id,
                                 "participant_user_id": participant_user_id,
                                 "channel_username": channel_username,
                                 "vote_timestamp": datetime.now()
-                            })
+                            }
+                            await self.db.db["user_votes"].insert_one(vote_record)
+                            print(f"DEBUG: Vote recorded: {vote_record}")
                             
                             # Update vote count in database
                             await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
