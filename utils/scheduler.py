@@ -79,36 +79,67 @@ class VoteScheduler:
         removed_count = 0
         
         try:
-            vote_id = vote_data["_id"]
             channel_username = vote_data["channel_username"]
+            print(f"Checking subscriptions for channel: {channel_username}")
             
-            # Get all participants for this vote
-            participants = await self.db.get_vote_participants(vote_id)
+            # Get all user votes for this channel (not participants)
+            user_votes = await self.db.db["user_votes"].find({
+                "channel_username": channel_username
+            }).to_list(length=None)
             
-            for participant in participants:
-                user_id = participant["user_id"]
-                
-                # Check if user is still subscribed to all required channels
-                subscription_status = await self.checker.check_all_subscriptions(
-                    user_id, [Config.SUPPORT_CHANNEL, Config.UPDATE_CHANNEL, channel_username]
-                )
-                
-                if not subscription_status["all_subscribed"]:
-                    # Remove participant
-                    success = await self.db.remove_participation(vote_id, user_id)
-                    if success:
-                        removed_count += 1
-                        print(f"Removed user {user_id} from vote {channel_username} (unsubscribed)")
+            # Group votes by user
+            user_vote_map = {}
+            for vote in user_votes:
+                user_id = vote["voter_id"]
+                if user_id not in user_vote_map:
+                    user_vote_map[user_id] = []
+                user_vote_map[user_id].append(vote)
+            
+            print(f"Found votes from {len(user_vote_map)} unique users")
+            
+            # Check each user's subscription
+            for user_id, votes in user_vote_map.items():
+                try:
+                    # Check if user is still subscribed to all required channels
+                    subscription_status = await self.checker.check_all_subscriptions(
+                        user_id, [Config.SUPPORT_CHANNEL, Config.UPDATE_CHANNEL, channel_username]
+                    )
+                    
+                    if not subscription_status["all_subscribed"]:
+                        print(f"User {user_id} is not subscribed - removing {len(votes)} votes")
                         
-                        # Remove all votes cast by this unsubscribed user
-                        await self.remove_user_votes(user_id, channel_username)
+                        # Remove each vote and update counts
+                        for vote in votes:
+                            unique_post_id = vote.get("unique_post_id")
+                            
+                            if unique_post_id:
+                                # Decrement post vote count
+                                result = await self.db.db["participants"].update_one(
+                                    {
+                                        "channel_username": channel_username,
+                                        "unique_post_id": unique_post_id
+                                    },
+                                    {"$inc": {"post_vote_count": -1}}
+                                )
+                                
+                                if result.modified_count > 0:
+                                    print(f"Decremented vote count for post {unique_post_id}")
+                                    
+                                    # Update channel button
+                                    await self.update_channel_vote_button_by_post_id(channel_username, unique_post_id)
                         
-                        # Update vote count button
-                        await self.update_vote_count_button(vote_data)
+                        # Remove all votes from this user
+                        delete_result = await self.db.db["user_votes"].delete_many({
+                            "voter_id": user_id,
+                            "channel_username": channel_username
+                        })
                         
-                        # Optional: Notify user about removal
-                        if Config.LOG_CHANNEL_ID:
-                            await self.log_participant_removal(user_id, channel_username)
+                        removed_count += delete_result.deleted_count
+                        print(f"Removed {delete_result.deleted_count} votes from user {user_id}")
+                        
+                except Exception as e:
+                    print(f"Error checking user {user_id}: {e}")
+                    continue
             
         except Exception as e:
             print(f"Error checking subscriptions for vote {vote_data.get('channel_username', 'unknown')}: {e}")

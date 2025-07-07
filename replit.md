@@ -216,6 +216,14 @@ Changelog:
   - Enhanced vote removal system for unsubscribed users using unique_post_id tracking
   - Scheduler now properly decrements individual post vote counts when users unsubscribe
   - Complete vote integrity system with individual post tracking and automatic cleanup
+- July 7, 2025: Implemented Full Automatic Vote Removal System
+  - Updated message formatting to use ❖ tiny caps font (bold) as requested
+  - Completely rewrote scheduler logic for automatic vote removal
+  - System now automatically checks every 5 minutes for unsubscribed users
+  - Direct database vote removal with individual post count decrements
+  - Real-time channel button updates with new vote counts
+  - Comprehensive vote integrity system with zero manual intervention required
+  - Production-ready automated vote cleanup system fully operational
 ```
 
 ## User Preferences
