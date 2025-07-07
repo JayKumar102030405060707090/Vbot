@@ -15,7 +15,7 @@ class AdminHandler:
         async def stats_command(client: Client, message: Message):
             # Check if user is owner
             if not await self.is_owner(message.from_user.id):
-                await message.reply_text("❌ **Access denied!** Only bot owner can use this command.")
+                await message.reply_text("**❌ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ! ❖ ᴏɴʟʏ ʙᴏᴛ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ❖**")
                 return
             
             await self.send_bot_stats(message)
@@ -23,11 +23,11 @@ class AdminHandler:
         @self.app.on_message(filters.command("votes") & filters.private)
         async def votes_command(client: Client, message: Message):
             if not await self.is_owner(message.from_user.id):
-                await message.reply_text("❌ **Access denied!** Only bot owner can use this command.")
+                await message.reply_text("**❌ ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ! ❖ ᴏɴʟʏ ʙᴏᴛ ᴏᴡɴᴇʀ ᴄᴀɴ ᴜsᴇ ᴛʜɪs ᴄᴏᴍᴍᴀɴᴅ ❖**")
                 return
             
             if len(message.command) < 2:
-                await message.reply_text("❌ **Usage:** `/votes @channel_username`")
+                await message.reply_text("**❌ ᴜsᴀɢᴇ:** `/votes @channel_username`")
                 return
             
             channel_username = message.command[1]

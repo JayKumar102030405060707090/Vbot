@@ -25,7 +25,7 @@ class SimpleVoteHandler:
             self.pending_channels[user_id] = True
             
             await message.reply_text(
-                "**Send your channel username (e.g., @KomalMusicUpdate)**"
+                "**❖ sᴇɴᴅ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀɴᴀᴍᴇ (ᴇ.ɢ., @KomalMusicUpdate) ❖**"
             )
         
         # Handle channel username input
@@ -42,8 +42,8 @@ class SimpleVoteHandler:
             # Validate channel format
             if not channel_username.startswith('@'):
                 await message.reply_text(
-                    "❌ **Invalid Format**\n\n"
-                    "Please send channel username with @ symbol\n"
+                    "**❌ ɪɴᴠᴀʟɪᴅ ғᴏʀᴍᴀᴛ**\n\n"
+                    "**❖ ᴘʟᴇᴀsᴇ sᴇɴᴅ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀɴᴀᴍᴇ ᴡɪᴛʜ @ sʏᴍʙᴏʟ ❖**\n"
                     "Example: @KomalMusicUpdate"
                 )
                 return

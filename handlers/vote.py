@@ -24,9 +24,9 @@ class VoteHandler:
             self.pending_votes[user_id] = {"step": "waiting_channel"}
             
             await message.reply_text(
-                "❓ **Enter Channel Username With @**\n\n"
-                "**First add me to your channel as Admin, then send the channel username.**\n\n"
-                "**Example:** @KomalMusicUpdate"
+                "**❓ ᴇɴᴛᴇʀ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀɴᴀᴍᴇ ᴡɪᴛʜ @**\n\n"
+                "**❖ ғɪʀsᴛ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴀs ᴀᴅᴍɪɴ, ᴛʜᴇɴ sᴇɴᴅ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ᴜsᴇʀɴᴀᴍᴇ ❖**\n\n"
+                "**❖ ᴇxᴀᴍᴘʟᴇ:** @KomalMusicUpdate"
             )
         
         @self.app.on_message(filters.private & filters.text)

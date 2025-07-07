@@ -33,7 +33,7 @@ class VerifyHandler:
                 
             except Exception as e:
                 print(f"Error handling vote button: {e}")
-                await query.answer("❌ Error processing vote. Please try again.", show_alert=True)
+                await query.answer("**❌ ᴇʀʀᴏʀ ᴘʀᴏᴄᴇssɪɴɢ ᴠᴏᴛᴇ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ❖**", show_alert=True)
 
         @self.app.on_callback_query(filters.regex(r"^verify_"))
         async def handle_verification(client: Client, query: CallbackQuery):
@@ -146,13 +146,13 @@ class VerifyHandler:
                                         print(f"DEBUG: Error updating channel message: {e2}")
                     else:
                         # Not subscribed
-                        await query.answer("❌ You must be subscribed to this channel to vote!", show_alert=True)
+                        await query.answer("**❌ ʏᴏᴜ ᴍᴜsᴛ ʙᴇ sᴜʙsᴄʀɪʙᴇᴅ ᴛᴏ ᴛʜɪs ᴄʜᴀɴɴᴇʟ ᴛᴏ ᴠᴏᴛᴇ! ❖**", show_alert=True)
                 else:
-                    await query.answer("❌ Invalid vote data!", show_alert=True)
+                    await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
                     
             except Exception as e:
                 print(f"Error handling channel vote: {e}")
-                await query.answer("❌ Error processing vote. Please try again.", show_alert=True)
+                await query.answer("**❌ ᴇʀʀᴏʀ ᴘʀᴏᴄᴇssɪɴɢ ᴠᴏᴛᴇ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ❖**", show_alert=True)
         
         @self.app.on_callback_query(filters.regex(r"^help$"))
         async def handle_help(client: Client, query: CallbackQuery):
