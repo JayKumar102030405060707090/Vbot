@@ -365,7 +365,7 @@ class VerifyHandler:
             # Create participation message for channel
             participation_message = f"""**❖ ᴘᴀʀᴛɪᴄɪᴘᴀɴᴛ ᴅᴇᴛᴀɪʟs ❖**
 
-**▶ ᴜsᴇʀ:** °•🔱•(🌀)**{display_name}**🔱•°
+**▶ ᴜsᴇʀ:** **{display_name}**
 •••••• **{username_display}**
 
 **▶ ᴜsᴇʀ-ɪᴅ:** {user_data['user_id']}
@@ -373,7 +373,7 @@ class VerifyHandler:
 
 **❖ ɴᴏᴛᴇ: ᴏɴʟʏ ᴄʜᴀɴɴᴇʟ sᴜʙsᴄʀɪʙᴇʀs ᴄᴀɴ ᴠᴏᴛᴇ ❖**
 
-**×× ᴄʀᴇᴀᴛᴇᴅ ʙʏ - [ᴠᴏᴛᴇ ʙᴏᴛ](https://t.me/BotNations)**"""
+**×× ᴄʀᴇᴀᴛᴇᴅ ʙʏ - [ᴠᴏᴛᴇ ʙᴏᴛ](https://t.me/Komalmusicupdate)**"""
             
             # Post to channel using channel username
             channel_username = vote_data.get("channel_username", "")
@@ -390,13 +390,12 @@ class VerifyHandler:
                 [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
             ])
             
-            # Send photo to channel with voting button and caption
-sent_message = await self.app.send_photo(
+            # Send message to channel with voting button
+sent_message = await self.app.send_message(
     chat_id=channel_username,
-    photo="https://graph.org/file/f3a6d7dcac00f31595950-8595bcbff45553a18a.jpg",
-    caption=participation_message,
+    text=participation_message,
     reply_markup=vote_button,
-    parse_mode="markdown"
+    disable_web_page_preview=True
 )
             
             print(f"DEBUG: Message posted successfully to channel {channel_username}")
