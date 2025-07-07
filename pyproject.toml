@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = [
     "pyrogram==1.4.16",
     "tgcrypto==1.2.5",
-    "motor==3.4.0",
+    "motor==3.3.2",
     "apscheduler==3.10.4",
     "pymongo==4.8.0",
 ]
