@@ -3,9 +3,9 @@ from typing import List
 
 class Config:
     # Bot configuration
-    API_ID = int(os.getenv("API_ID", "12345678"))
-    API_HASH = os.getenv("API_HASH", "abcdef1234567890abcdef1234567890")
-    BOT_TOKEN = os.getenv("BOT_TOKEN", "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    API_ID = int(os.getenv("API_ID", "12380656"))
+    API_HASH = os.getenv("API_HASH", "d927c13beaaf5110f25c505b7c071273")
+    BOT_TOKEN = os.getenv("BOT_TOKEN", "7745907443:AAELqKtiMM7utQZrwnZdYZ5GpuHtG-c82eo")
     
     # Owner and channels
     OWNER_USERNAME = os.getenv("OWNER_USERNAME", "@INNOCENT_FUCKER")
@@ -13,10 +13,10 @@ class Config:
     UPDATE_CHANNEL = os.getenv("UPDATE_CHANNEL", "@KomalMusicUpdate")
     
     # Optional log channel
-    LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", "0")) if os.getenv("LOG_CHANNEL_ID") else None
+    LOG_CHANNEL_ID = int(os.getenv("LOG_CHANNEL_ID", "-1002387668895")) if os.getenv("LOG_CHANNEL_ID") else None
     
     # Database configuration
-    MONGO_DB_URI = os.getenv("MONGO_DB_URI", "mongodb://localhost:27017/votebot")
+    MONGO_DB_URI = os.getenv("MONGO_DB_URI", "mongodb+srv://jaydipmore74:xCpTm5OPAfRKYnif@cluster0.5jo18.mongodb.net/?retryWrites=true&w=majority")
     DATABASE_NAME = os.getenv("DATABASE_NAME", "votebot")
     
     # Collections
@@ -25,7 +25,7 @@ class Config:
     CHANNELS_COLLECTION = "channels"
     
     # Bot settings
-    BOT_USERNAME = os.getenv("BOT_USERNAME", "VOTES_RO_BOT")
+    BOT_USERNAME = os.getenv("BOT_USERNAME", "My_Vote_Robot")
     
     # Subscription check interval (in minutes)
     SUBSCRIPTION_CHECK_INTERVAL = int(os.getenv("SUBSCRIPTION_CHECK_INTERVAL", "5"))
