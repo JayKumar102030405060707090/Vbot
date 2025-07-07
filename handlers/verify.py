@@ -124,7 +124,26 @@ class VerifyHandler:
                                     [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{unique_post_id}")]
                                 ])
                                 
-                                await query.edit_message_reply_markup(reply_markup=updated_button)
+                                try:
+                                    await query.edit_message_reply_markup(reply_markup=updated_button)
+                                    print(f"DEBUG: Button updated successfully for post {unique_post_id} with count {new_count}")
+                                except Exception as e:
+                                    print(f"DEBUG: Error updating button for post {unique_post_id}: {e}")
+                                    # Try to update the message in the channel directly
+                                    try:
+                                        # Find the message ID from database
+                                        message_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
+                                            {"channel_username": channel_username, "unique_post_id": unique_post_id}
+                                        )
+                                        if message_data and message_data.get("channel_message_id"):
+                                            await self.app.edit_message_reply_markup(
+                                                chat_id=channel_username,
+                                                message_id=message_data["channel_message_id"],
+                                                reply_markup=updated_button
+                                            )
+                                            print(f"DEBUG: Channel message updated successfully for post {unique_post_id}")
+                                    except Exception as e2:
+                                        print(f"DEBUG: Error updating channel message: {e2}")
                     else:
                         # Not subscribed
                         await query.answer("❌ You must be subscribed to this channel to vote!", show_alert=True)
