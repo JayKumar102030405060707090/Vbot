@@ -117,15 +117,7 @@ class SimpleVoteHandler:
                 )
                 return
             
-            # Step 4: Check if vote session already exists
-            existing_vote = await self.db.get_vote_by_channel(channel_username)
-            if existing_vote:
-                await message.reply_text(
-                    f"⚠️ **Vote poll already exists for {channel_username}**\n\n"
-                    f"**Participation Link:**\n"
-                    f"https://t.me/{Config.BOT_USERNAME}?start={channel_username[1:]}"
-                )
-                return
+            # Step 4: Allow multiple votes per channel (removed restriction)
             
             # Step 5: Create database entry
             vote_data = {

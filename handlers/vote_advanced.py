@@ -405,18 +405,7 @@ Example: @KomalMusicUpdate
                 # If we can't check membership, assume it's fine but warn
                 pass
             
-            # Check if vote already exists
-            existing_vote = await self.db.get_vote_by_channel(channel_username)
-            if existing_vote:
-                return {
-                    'success': False,
-                    'message': f"⚠️ **Vote Already Exists**\n\n"
-                             f"Channel `{channel_username}` already has an active vote poll.\n\n"
-                             f"**Options:**\n"
-                             f"• Delete existing vote first\n"
-                             f"• Use different channel\n"
-                             f"• Contact admin for help"
-                }
+            # Allow multiple votes per channel (removed restriction)
             
             return {
                 'success': True,

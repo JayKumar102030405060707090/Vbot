@@ -195,15 +195,7 @@ class VerifyHandler:
                 )
                 return
             
-            # Check if user already participated
-            existing_participation = await self.db.get_participation(vote_data["_id"], user_id)
-            if existing_participation:
-                await query.edit_message_text(
-                    "✅ **You have already participated!**\n\n"
-                    f"**Channel:** {channel_username}\n"
-                    "Your participation is already recorded."
-                )
-                return
+            # Allow multiple participations (removed restriction)
             
             # Add participation
             participation_data = {
@@ -271,11 +263,7 @@ class VerifyHandler:
                 await query.answer("❌ Vote poll not found!", show_alert=True)
                 return
             
-            # Check if user already voted
-            existing_participation = await self.db.get_participation(vote_data["_id"], user_data["user_id"])
-            if existing_participation:
-                await query.answer("✅ You have already voted!", show_alert=True)
-                return
+            # Allow multiple votes (removed restriction)
             
             # Check subscription to all required channels
             from utils.check import SubscriptionChecker

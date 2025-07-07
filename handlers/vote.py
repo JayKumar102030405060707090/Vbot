@@ -112,14 +112,7 @@ class VoteHandler:
                 )
                 return
             
-            # Check if vote already exists for this channel
-            existing_vote = await self.db.get_vote_by_channel(channel_username)
-            if existing_vote:
-                await message.reply_text(
-                    f"❌ **Vote poll already exists for {channel_username}**\n\n"
-                    f"Only one active vote poll is allowed per channel."
-                )
-                return
+            # Allow multiple votes per channel (removed restriction)
             
             # Create vote poll
             await self.create_vote_poll(message, channel_username, chat_id, user_id)

@@ -143,8 +143,7 @@ class StartHandler:
             # Get current vote count
             current_count = await self.db.get_vote_count(vote_data["_id"])
             
-            # Check if user already voted
-            existing_participation = await self.db.get_participation(vote_data["_id"], user_data["user_id"])
+            # Allow multiple participations (removed restriction)
             
             # Format user display name
             display_name = user_data.get("first_name", "User")
