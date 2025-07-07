@@ -367,7 +367,7 @@ class VerifyHandler:
             emoji = vote_data.get("emoji", "⚡")
             unique_participant_id = f"{user_data['user_id']}_{int(datetime.now().timestamp())}"
             vote_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"{emoji} Vote for this participant", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
+                [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
             ])
             
             # Send message to channel with voting button
