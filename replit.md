@@ -207,6 +207,15 @@ Changelog:
   - Example: Ajay participates twice → creates 2 posts → users can vote on both posts
   - But each user can vote only once per specific participant post
   - Perfect voting system: no duplicate votes per participant, but multiple participations allowed
+- July 7, 2025: Fixed Complete Individual Vote Counting System
+  - Fixed database storage issue where unique_post_id was not being saved properly
+  - Implemented proper individual vote counting for each participant post
+  - Each participation post now has its own separate vote count (post_vote_count field)
+  - Vote buttons update in real-time with individual counts per post
+  - Same user can have multiple posts with different vote counts
+  - Enhanced vote removal system for unsubscribed users using unique_post_id tracking
+  - Scheduler now properly decrements individual post vote counts when users unsubscribe
+  - Complete vote integrity system with individual post tracking and automatic cleanup
 ```
 
 ## User Preferences
