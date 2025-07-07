@@ -1,0 +1,44 @@
+
+app:
+  name: telegram-vote-bot
+  
+services:
+  - name: telegram-vote-bot
+    type: worker
+    git:
+      branch: main
+    instance_types:
+      - nano
+    regions:
+      - fra
+    env:
+      - name: API_ID
+        value: "{{ .Env.API_ID }}"
+      - name: API_HASH
+        value: "{{ .Env.API_HASH }}"
+      - name: BOT_TOKEN
+        value: "{{ .Env.BOT_TOKEN }}"
+      - name: OWNER_USERNAME
+        value: "@INNOCENT_FUCKER"
+      - name: SUPPORT_CHANNEL
+        value: "@Komal_Music_Support"
+      - name: UPDATE_CHANNEL
+        value: "@KomalMusicUpdate"
+      - name: BOT_USERNAME
+        value: "{{ .Env.BOT_USERNAME }}"
+      - name: MONGO_DB_URI
+        value: "{{ .Env.MONGO_DB_URI }}"
+      - name: DATABASE_NAME
+        value: "votebot"
+      - name: SUBSCRIPTION_CHECK_INTERVAL
+        value: "5"
+    build:
+      buildpack: python
+    run_command: "uv run python main.py"
+    dockerfile: |
+      FROM python:3.11-slim
+      WORKDIR /app
+      COPY . .
+      RUN pip install uv
+      RUN uv sync --frozen
+      CMD ["uv", "run", "python", "main.py"]
