@@ -390,13 +390,14 @@ class VerifyHandler:
                 [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
             ])
             
-            # Send message to channel with voting button
-            sent_message = await self.app.send_message(
-                chat_id=channel_username,
-                text=participation_message,
-                reply_markup=vote_button,
-                disable_web_page_preview=True
-            )
+            # Send photo to channel with voting button and caption
+sent_message = await self.app.send_photo(
+    chat_id=channel_username,
+    photo="https://graph.org/file/f3a6d7dcac00f31595950-8595bcbff45553a18a.jpg",
+    caption=participation_message,
+    reply_markup=vote_button,
+    parse_mode="markdown"
+)
             
             print(f"DEBUG: Message posted successfully to channel {channel_username}")
             print(f"DEBUG: Message ID: {sent_message.message_id}")
