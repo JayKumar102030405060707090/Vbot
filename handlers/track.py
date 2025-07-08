@@ -23,19 +23,28 @@ class TrackHandler:
         @self.app.on_message(filters.command("track") & filters.private)
         async def track_command(client: Client, message: Message):
             user_id = message.from_user.id
+            command_text = message.text.strip()
             
+            # Check if user provided a post link or user ID
+            if len(command_text.split()) > 1:
+                post_identifier = command_text.split(maxsplit=1)[1]
+                await self.process_track_by_identifier(message, post_identifier)
             # Check if user replied to a participation post
-            if not message.reply_to_message:
+            elif message.reply_to_message:
+                await self.process_track_request(message)
+            else:
                 await message.reply_text(
-                    "❌ **Please reply to a participation post with /track command to see vote details!**\n\n"
-                    "**How to use:**\n"
-                    "1. Forward any participation post to bot\n"
-                    "2. Reply to that forwarded post with /track\n"
-                    "3. Get detailed voting information"
+                    "📊 **Track Vote Details**\n\n"
+                    "**Usage Options:**\n"
+                    "**1. `/track user_id`** - Track using participant user ID\n"
+                    "**2. `/track post_link`** - Track using post link\n"
+                    "**3. Reply to forwarded post with `/track`**\n\n"
+                    "**Examples:**\n"
+                    "• `/track 7840521426` - Track votes for user ID\n"
+                    "• `/track https://t.me/channel/123` - Track using post link\n"
+                    "• Forward post → Reply with `/track`"
                 )
                 return
-            
-            await self.process_track_request(message)
         
         @self.app.on_message(filters.forwarded & filters.private)
         async def handle_forwarded_post(client: Client, message: Message):
@@ -78,6 +87,47 @@ class TrackHandler:
         
         text_lower = text.lower()
         return any(keyword.lower() in text_lower for keyword in keywords)
+    
+    async def process_track_by_identifier(self, message: Message, identifier: str):
+        """Process track request using post link or user ID"""
+        try:
+            # Check if identifier is a user ID (numeric)
+            if identifier.isdigit():
+                user_id = int(identifier)
+                participant_info = {
+                    'user_id': user_id,
+                    'username': 'unknown',
+                    'first_name': 'Unknown User',
+                    'channel_username': '@unknown'
+                }
+            else:
+                # Try to extract user ID from post link or other identifier
+                user_id_match = re.search(r'(\d{9,12})', identifier)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    participant_info = {
+                        'user_id': user_id,
+                        'username': 'unknown',
+                        'first_name': 'Unknown User',
+                        'channel_username': '@unknown'
+                    }
+                else:
+                    await message.reply_text("❌ **Invalid identifier. Please provide a valid user ID or post link.**")
+                    return
+            
+            # Get vote details from database
+            vote_details = await self.get_vote_details(participant_info)
+            
+            if not vote_details or vote_details['total_votes'] == 0:
+                await message.reply_text(f"❌ **No votes found for user ID: {participant_info['user_id']}**")
+                return
+            
+            # Send detailed vote information
+            await self.send_vote_details(message, participant_info, vote_details)
+            
+        except Exception as e:
+            logger.error(f"Error processing track by identifier: {e}")
+            await message.reply_text("❌ **Error processing track request. Please try again.**")
     
     async def process_track_request(self, message: Message):
         """Process track request for participation post"""
