@@ -60,23 +60,32 @@ class VerifyHandler:
                 # Extract channel and unique participant ID from callback data
                 # Format: channel_vote_CHANNELNAME_USERID_TIMESTAMP
                 callback_parts = query.data.split("_")
+                print(f"DEBUG: Full callback data: {query.data}")
                 print(f"DEBUG: Callback data parts: {callback_parts}")
                 
                 if len(callback_parts) >= 4:
                     channel_name = callback_parts[2]
+                    print(f"DEBUG: Channel name extracted: {channel_name}")
+                    
                     # Handle the unique_post_id format: userid_timestamp
                     if len(callback_parts) >= 5:
+                        # Format: channel_vote_channelname_userid_timestamp
                         unique_post_id = f"{callback_parts[3]}_{callback_parts[4]}"
+                        print(f"DEBUG: Unique post ID: {unique_post_id}")
                         try:
                             participant_user_id = int(callback_parts[3])
+                            print(f"DEBUG: Participant user ID: {participant_user_id}")
                         except ValueError:
                             print(f"DEBUG: Invalid user_id format in callback: {callback_parts[3]}")
                             await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
                             return
                     else:
-                        unique_post_id = callback_parts[3]  # fallback for old posts
+                        # Fallback for old format
+                        unique_post_id = callback_parts[3]
+                        print(f"DEBUG: Fallback unique post ID: {unique_post_id}")
                         try:
                             participant_user_id = int(callback_parts[3])
+                            print(f"DEBUG: Fallback participant user ID: {participant_user_id}")
                         except ValueError:
                             print(f"DEBUG: Invalid user_id format in callback: {callback_parts[3]}")
                             await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
@@ -406,8 +415,11 @@ class VerifyHandler:
             # Get channel name without @ symbol
             channel_name = channel_username[1:] if channel_username.startswith('@') else channel_username
             
+            callback_data = f"channel_vote_{channel_name}_{unique_participant_id}"
+            print(f"DEBUG: Generated callback data: {callback_data}")
+            
             vote_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_name}_{unique_participant_id}")]
+                [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=callback_data)]
             ])
             
             # Send message to channel with voting button and image
