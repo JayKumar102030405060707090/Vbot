@@ -108,84 +108,81 @@ class VerifyHandler:
                     print(f"DEBUG: Invalid user_id format: {user_id_str}")
                     await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
                     return
+                
+                # Check if voter is subscribed to the channel
+                voter_id = query.from_user.id
+                channel_username = f"@{channel_name}"
+                
+                # Verify subscription to all required channels
+                subscription_status = await self.checker.check_all_subscriptions(
+                    voter_id, [Config.SUPPORT_CHANNEL, Config.UPDATE_CHANNEL, channel_username]
+                )
+                
+                if subscription_status["all_subscribed"]:
+                    # Check if user has already voted for this specific participant post
+                    print(f"DEBUG: Checking vote - Voter: {voter_id}, Participant: {participant_user_id}, Post ID: {unique_post_id}, Channel: {channel_username}")
+                    existing_vote = await self.db.get_user_vote_on_post(voter_id, unique_post_id)
+                    print(f"DEBUG: Existing vote found: {existing_vote}")
                     
-                    # Check if voter is subscribed to the channel
-                    voter_id = query.from_user.id
-                    channel_username = f"@{channel_name}"
-                    
-                    # Verify subscription to all required channels
-                    subscription_status = await self.checker.check_all_subscriptions(
-                        voter_id, [Config.SUPPORT_CHANNEL, Config.UPDATE_CHANNEL, channel_username]
-                    )
-                    
-                    if subscription_status["all_subscribed"]:
-                        
-                        # Check if user has already voted for this specific participant post
-                        print(f"DEBUG: Checking vote - Voter: {voter_id}, Participant: {participant_user_id}, Post ID: {unique_post_id}, Channel: {channel_username}")
-                        existing_vote = await self.db.get_user_vote_on_post(voter_id, unique_post_id)
-                        print(f"DEBUG: Existing vote found: {existing_vote}")
-                        
-                        if existing_vote:
-                            # User has already voted for this specific participant post
-                            print(f"DEBUG: Duplicate vote prevented for voter {voter_id} on post {unique_post_id}")
-                            await query.answer("❌ You have already voted for this participant!", show_alert=True)
-                        else:
-                            # Allow vote - first time voting for this specific participant post
-                            print(f"DEBUG: Allowing vote for voter {voter_id} on post {unique_post_id}")
-                            await query.answer("✅ Vote counted! Thank you for voting.", show_alert=True)
-                            
-                            # Record the vote to prevent duplicate voting for same participant post
-                            vote_record = {
-                                "voter_id": voter_id,
-                                "participant_user_id": participant_user_id,
-                                "unique_post_id": unique_post_id,
-                                "channel_username": channel_username,
-                                "vote_timestamp": datetime.now()
-                            }
-                            await self.db.add_user_vote(vote_record)
-                            print(f"DEBUG: Vote recorded: {vote_record}")
-                            
-                            # Update vote count for this specific post
-                            new_count = await self.db.get_post_vote_count(unique_post_id)
-                            await self.db.update_post_vote_count(unique_post_id, new_count)
-                            
-                            # Update button text with new count for this specific post
-                            participant_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
-                                {"channel_username": channel_username, "unique_post_id": unique_post_id}
-                            )
-                            if participant_data:
-                                new_count = participant_data.get("post_vote_count", 1)
-                                emoji = "⚡"
-                                updated_button = InlineKeyboardMarkup([
-                                    [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{unique_post_id}")]
-                                ])
-                                
-                                try:
-                                    await query.edit_message_reply_markup(reply_markup=updated_button)
-                                    print(f"DEBUG: Button updated successfully for post {unique_post_id} with count {new_count}")
-                                except Exception as e:
-                                    print(f"DEBUG: Error updating button for post {unique_post_id}: {e}")
-                                    # Try to update the message in the channel directly
-                                    try:
-                                        # Find the message ID from database
-                                        message_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
-                                            {"channel_username": channel_username, "unique_post_id": unique_post_id}
-                                        )
-                                        if message_data and message_data.get("channel_message_id"):
-                                            await self.app.edit_message_reply_markup(
-                                                chat_id=channel_username,
-                                                message_id=message_data["channel_message_id"],
-                                                reply_markup=updated_button
-                                            )
-                                            print(f"DEBUG: Channel message updated successfully for post {unique_post_id}")
-                                    except Exception as e2:
-                                        print(f"DEBUG: Error updating channel message: {e2}")
+                    if existing_vote:
+                        # User has already voted for this specific participant post
+                        print(f"DEBUG: Duplicate vote prevented for voter {voter_id} on post {unique_post_id}")
+                        await query.answer("❌ You have already voted for this participant!", show_alert=True)
                     else:
-                        # Not subscribed to required channels
-                        missing_channels = subscription_status.get("missing_channels", [])
-                        await query.answer(f"**❌ ʏᴏᴜ ᴍᴜsᴛ sᴜʙsᴄʀɪʙᴇ ᴛᴏ ᴀʟʟ ʀᴇǫᴜɪʀᴇᴅ ᴄʜᴀɴɴᴇʟs: {', '.join(missing_channels)} ❖**", show_alert=True)
+                        # Allow vote - first time voting for this specific participant post
+                        print(f"DEBUG: Allowing vote for voter {voter_id} on post {unique_post_id}")
+                        await query.answer("✅ Vote counted! Thank you for voting.", show_alert=True)
+                        
+                        # Record the vote to prevent duplicate voting for same participant post
+                        vote_record = {
+                            "voter_id": voter_id,
+                            "participant_user_id": participant_user_id,
+                            "unique_post_id": unique_post_id,
+                            "channel_username": channel_username,
+                            "vote_timestamp": datetime.now()
+                        }
+                        await self.db.add_user_vote(vote_record)
+                        print(f"DEBUG: Vote recorded: {vote_record}")
+                        
+                        # Update vote count for this specific post
+                        new_count = await self.db.get_post_vote_count(unique_post_id)
+                        await self.db.update_post_vote_count(unique_post_id, new_count)
+                        
+                        # Update button text with new count for this specific post
+                        participant_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
+                            {"channel_username": channel_username, "unique_post_id": unique_post_id}
+                        )
+                        if participant_data:
+                            new_count = participant_data.get("post_vote_count", 1)
+                            emoji = "⚡"
+                            updated_button = InlineKeyboardMarkup([
+                                [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{unique_post_id}")]
+                            ])
+                            
+                            try:
+                                await query.edit_message_reply_markup(reply_markup=updated_button)
+                                print(f"DEBUG: Button updated successfully for post {unique_post_id} with count {new_count}")
+                            except Exception as e:
+                                print(f"DEBUG: Error updating button for post {unique_post_id}: {e}")
+                                # Try to update the message in the channel directly
+                                try:
+                                    # Find the message ID from database
+                                    message_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
+                                        {"channel_username": channel_username, "unique_post_id": unique_post_id}
+                                    )
+                                    if message_data and message_data.get("channel_message_id"):
+                                        await self.app.edit_message_reply_markup(
+                                            chat_id=channel_username,
+                                            message_id=message_data["channel_message_id"],
+                                            reply_markup=updated_button
+                                        )
+                                        print(f"DEBUG: Channel message updated successfully for post {unique_post_id}")
+                                except Exception as e2:
+                                    print(f"DEBUG: Error updating channel message: {e2}")
                 else:
-                    await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
+                    # Not subscribed to required channels
+                    missing_channels = subscription_status.get("missing_channels", [])
+                    await query.answer(f"**❌ ʏᴏᴜ ᴍᴜsᴛ sᴜʙsᴄʀɪʙᴇ ᴛᴏ ᴀʟʟ ʀᴇǫᴜɪʀᴇᴅ ᴄʜᴀɴɴᴇʟs: {', '.join(missing_channels)} ❖**", show_alert=True)
                     
             except Exception as e:
                 print(f"Error handling channel vote: {e}")
