@@ -57,39 +57,47 @@ class VerifyHandler:
         async def handle_channel_vote_button(client: Client, query: CallbackQuery):
             """Handle channel vote button clicks"""
             try:
-                # Extract channel and unique participant ID from callback data
-                # Format: channel_vote_CHANNELNAME_USERID_TIMESTAMP
-                callback_parts = query.data.split("_")
                 print(f"DEBUG: Full callback data: {query.data}")
-                print(f"DEBUG: Callback data parts: {callback_parts}")
                 
-                if len(callback_parts) >= 4:
-                    channel_name = callback_parts[2]
-                    print(f"DEBUG: Channel name extracted: {channel_name}")
-                    
-                    # Handle the unique_post_id format: userid_timestamp
-                    if len(callback_parts) >= 5:
-                        # Format: channel_vote_channelname_userid_timestamp
-                        unique_post_id = f"{callback_parts[3]}_{callback_parts[4]}"
-                        print(f"DEBUG: Unique post ID: {unique_post_id}")
-                        try:
-                            participant_user_id = int(callback_parts[3])
-                            print(f"DEBUG: Participant user ID: {participant_user_id}")
-                        except ValueError:
-                            print(f"DEBUG: Invalid user_id format in callback: {callback_parts[3]}")
-                            await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
-                            return
-                    else:
-                        # Fallback for old format
-                        unique_post_id = callback_parts[3]
-                        print(f"DEBUG: Fallback unique post ID: {unique_post_id}")
-                        try:
-                            participant_user_id = int(callback_parts[3])
-                            print(f"DEBUG: Fallback participant user ID: {participant_user_id}")
-                        except ValueError:
-                            print(f"DEBUG: Invalid user_id format in callback: {callback_parts[3]}")
-                            await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
-                            return
+                # More flexible parsing - handle channel names that might contain underscores
+                callback_data = query.data
+                if not callback_data.startswith("channel_vote_"):
+                    await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
+                    return
+                
+                # Remove the "channel_vote_" prefix
+                remaining_data = callback_data[13:]  # Remove "channel_vote_"
+                print(f"DEBUG: Remaining data after prefix removal: {remaining_data}")
+                
+                # Find the last two underscores (for userid_timestamp)
+                parts = remaining_data.split("_")
+                print(f"DEBUG: All parts: {parts}")
+                
+                if len(parts) < 3:
+                    await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
+                    return
+                
+                # The last two parts should be userid and timestamp
+                user_id_str = parts[-2]
+                timestamp_str = parts[-1]
+                
+                # Everything before the last two parts is the channel name
+                channel_name = "_".join(parts[:-2])
+                
+                print(f"DEBUG: Channel name: {channel_name}")
+                print(f"DEBUG: User ID string: {user_id_str}")
+                print(f"DEBUG: Timestamp string: {timestamp_str}")
+                
+                # Validate user ID
+                try:
+                    participant_user_id = int(user_id_str)
+                    unique_post_id = f"{user_id_str}_{timestamp_str}"
+                    print(f"DEBUG: Participant user ID: {participant_user_id}")
+                    print(f"DEBUG: Unique post ID: {unique_post_id}")
+                except ValueError:
+                    print(f"DEBUG: Invalid user_id format: {user_id_str}")
+                    await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
+                    return
                     
                     # Check if voter is subscribed to the channel
                     voter_id = query.from_user.id
@@ -171,6 +179,9 @@ class VerifyHandler:
                     
             except Exception as e:
                 print(f"Error handling channel vote: {e}")
+                print(f"DEBUG: Error details - Query data: {query.data}")
+                import traceback
+                traceback.print_exc()
                 await query.answer("**❌ ᴇʀʀᴏʀ ᴘʀᴏᴄᴇssɪɴɢ ᴠᴏᴛᴇ. ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ❖**", show_alert=True)
         
         @self.app.on_callback_query(filters.regex(r"^help$"))
