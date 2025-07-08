@@ -60,15 +60,27 @@ class VerifyHandler:
                 # Extract channel and unique participant ID from callback data
                 # Format: channel_vote_CHANNELNAME_USERID_TIMESTAMP
                 callback_parts = query.data.split("_")
+                print(f"DEBUG: Callback data parts: {callback_parts}")
+                
                 if len(callback_parts) >= 4:
                     channel_name = callback_parts[2]
-                    # Handle both old format (just user_id) and new format (user_id_timestamp)
+                    # Handle the unique_post_id format: userid_timestamp
                     if len(callback_parts) >= 5:
-                        participant_user_id = int(callback_parts[3])
                         unique_post_id = f"{callback_parts[3]}_{callback_parts[4]}"
+                        try:
+                            participant_user_id = int(callback_parts[3])
+                        except ValueError:
+                            print(f"DEBUG: Invalid user_id format in callback: {callback_parts[3]}")
+                            await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
+                            return
                     else:
-                        participant_user_id = int(callback_parts[3])
                         unique_post_id = callback_parts[3]  # fallback for old posts
+                        try:
+                            participant_user_id = int(callback_parts[3])
+                        except ValueError:
+                            print(f"DEBUG: Invalid user_id format in callback: {callback_parts[3]}")
+                            await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
+                            return
                     
                     # Check if voter is subscribed to the channel
                     voter_id = query.from_user.id
@@ -390,8 +402,12 @@ class VerifyHandler:
             emoji = vote_data.get("emoji", "⚡")
             import time
             unique_participant_id = f"{user_data['user_id']}_{int(time.time() * 1000000)}"  # Microsecond precision
+            
+            # Get channel name without @ symbol
+            channel_name = channel_username[1:] if channel_username.startswith('@') else channel_username
+            
             vote_button = InlineKeyboardMarkup([
-                [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
+                [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_name}_{unique_participant_id}")]
             ])
             
             # Send message to channel with voting button and image
