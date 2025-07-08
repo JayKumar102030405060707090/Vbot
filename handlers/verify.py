@@ -396,13 +396,13 @@ class VerifyHandler:
                 [InlineKeyboardButton(f"{emoji} Vote for this participant (0)", callback_data=f"channel_vote_{channel_username[1:]}_{unique_participant_id}")]
             ])
             
-            # Send message to channel with voting button
+            # Send message to channel with voting button and image
             try:
-                sent_message = await self.app.send_message(
+                sent_message = await self.app.send_photo(
                     chat_id=channel_username,
-                    text=participation_message,
-                    reply_markup=vote_button,
-                    disable_web_page_preview=True
+                    photo="https://graph.org/file/f3a6d7dcac00f31595950-8595bcbff45553a18a.jpg",
+                    caption=participation_message,
+                    reply_markup=vote_button
                 )
             except Exception as send_error:
                 if "USERNAME_NOT_OCCUPIED" in str(send_error):
@@ -413,7 +413,7 @@ class VerifyHandler:
                     return
             
             print(f"DEBUG: Message posted successfully to channel {channel_username}")
-            print(f"DEBUG: Message ID: {sent_message.message_id}")
+            print(f"DEBUG: Message ID: {sent_message.id}")
             
             # Store the participation message ID for tracking with unique post ID
             try:
@@ -423,7 +423,7 @@ class VerifyHandler:
                     "user_id": user_data["user_id"],
                     "channel_username": channel_username,
                     "unique_post_id": unique_participant_id,
-                    "channel_message_id": sent_message.message_id,
+                    "channel_message_id": sent_message.id,
                     "channel_chat_id": channel_username,
                     "post_vote_count": 0,  # Individual vote count for this specific post
                     "created_at": datetime.now()
@@ -439,7 +439,7 @@ class VerifyHandler:
                     },
                     {
                         "$set": {
-                            "channel_message_id": sent_message.message_id,
+                            "channel_message_id": sent_message.id,
                             "channel_chat_id": channel_username,
                             "unique_post_id": unique_participant_id,
                             "post_vote_count": 0  # Individual vote count for this specific post
