@@ -2,6 +2,7 @@ import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime
 import logging
+from config import Config
 
 logger = logging.getLogger(__name__)
 

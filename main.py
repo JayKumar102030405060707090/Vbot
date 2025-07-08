@@ -18,11 +18,12 @@ logger = logging.getLogger(__name__)
 class VoteBot:
     def __init__(self):
         self.app = Client(
-    name=":memory:",  # ✅ This disables .session file completely
-    api_id=Config.API_ID,
-    api_hash=Config.API_HASH,
-    bot_token=Config.BOT_TOKEN,
-    sleep_threshold=60
+            name="votebot",  # Use a session name
+            api_id=Config.API_ID,
+            api_hash=Config.API_HASH,
+            bot_token=Config.BOT_TOKEN,
+            sleep_threshold=60,
+            workdir="."
         )
         self.db = Database()
         self.permanent_db = permanent_db
