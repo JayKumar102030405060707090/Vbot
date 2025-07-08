@@ -68,8 +68,25 @@ class VoteScheduler:
     async def get_active_votes(self):
         """Get all active vote polls"""
         try:
-            cursor = self.db.db[Config.VOTES_COLLECTION].find({"active": True})
-            return await cursor.to_list(length=None)
+            # Get votes with either active field structure
+            cursor = self.db.db[Config.VOTES_COLLECTION].find({
+                "$or": [
+                    {"active": True},
+                    {"status": "active"}
+                ]
+            })
+            votes = await cursor.to_list(length=None)
+            
+            # Filter out votes with invalid channel usernames
+            valid_votes = []
+            for vote in votes:
+                channel_username = vote.get("channel_username") or vote.get("channel", "")
+                if channel_username and len(channel_username) >= 2:
+                    valid_votes.append(vote)
+                else:
+                    print(f"Filtering out vote with invalid channel: '{channel_username}'")
+                    
+            return valid_votes
         except Exception as e:
             print(f"Error getting active votes: {e}")
             return []
@@ -79,7 +96,14 @@ class VoteScheduler:
         removed_count = 0
         
         try:
-            channel_username = vote_data["channel_username"]
+            # Get channel username from either field (backward compatibility)
+            channel_username = vote_data.get("channel_username") or vote_data.get("channel", "")
+            
+            # Skip if channel username is empty or invalid
+            if not channel_username or len(channel_username) < 2:
+                print(f"Skipping vote with invalid channel username: '{channel_username}'")
+                return 0
+                
             print(f"Checking subscriptions for channel: {channel_username}")
             
             # Get all user votes for this channel (not participants)

@@ -56,10 +56,20 @@ class Database:
     
     async def get_vote_by_channel(self, channel_username: str) -> Optional[Dict]:
         """Get vote poll by channel username"""
-        return await self.db[Config.VOTES_COLLECTION].find_one({
-            "channel": channel_username,
-            "status": "active"
+        # Try both "channel" and "channel_username" fields for backward compatibility
+        vote_data = await self.db[Config.VOTES_COLLECTION].find_one({
+            "channel_username": channel_username,
+            "active": True
         })
+        
+        if not vote_data:
+            # Fallback to old "channel" field
+            vote_data = await self.db[Config.VOTES_COLLECTION].find_one({
+                "channel": channel_username,
+                "status": "active"
+            })
+            
+        return vote_data
     
     async def get_vote_by_id(self, vote_id: str) -> Optional[Dict]:
         """Get vote poll by ID"""
