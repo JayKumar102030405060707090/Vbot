@@ -69,7 +69,7 @@ class VerifyHandler:
                 remaining_data = callback_data[13:]  # Remove "channel_vote_"
                 print(f"DEBUG: Remaining data after prefix removal: {remaining_data}")
                 
-                # Find the last two underscores (for userid_timestamp)
+                # Split by underscore and find the last two numeric parts
                 parts = remaining_data.split("_")
                 print(f"DEBUG: All parts: {parts}")
                 
@@ -77,12 +77,22 @@ class VerifyHandler:
                     await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
                     return
                 
-                # The last two parts should be userid and timestamp
-                user_id_str = parts[-2]
-                timestamp_str = parts[-1]
+                # Find the last numeric part (timestamp) and second last numeric part (user_id)
+                user_id_str = None
+                timestamp_str = None
                 
-                # Everything before the last two parts is the channel name
-                channel_name = "_".join(parts[:-2])
+                # Look from the end to find two consecutive numeric parts
+                for i in range(len(parts) - 1, 0, -1):
+                    if parts[i].isdigit() and parts[i-1].isdigit():
+                        user_id_str = parts[i-1]
+                        timestamp_str = parts[i]
+                        # Channel name is everything before these two parts
+                        channel_name = "_".join(parts[:i-1])
+                        break
+                
+                if not user_id_str or not timestamp_str:
+                    await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
+                    return
                 
                 print(f"DEBUG: Channel name: {channel_name}")
                 print(f"DEBUG: User ID string: {user_id_str}")
