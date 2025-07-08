@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class PermanentDatabase:
     def __init__(self):
-        self.mongo_uri = os.getenv("MONGO_DB_URI")
+        self.mongo_uri = os.getenv("MONGO_DB_URI") or Config.MONGO_DB_URI
         self.client = None
         self.db = None
         

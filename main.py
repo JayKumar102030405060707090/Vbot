@@ -30,46 +30,35 @@ class VoteBot:
         
     async def start_bot(self):
         """Start the bot and initialize services"""
-        retries = 3
-        for attempt in range(retries):
-            try:
-                # Clear any existing session issues
-                if attempt > 0:
-                    await asyncio.sleep(2)
-                    
-                await self.app.start()
-                logger.info("Bot started successfully!")
+        try:
+            # Start bot client
+            await self.app.start()
+            logger.info("Bot started successfully!")
+            
+            # Initialize database
+            await self.db.connect()
+            logger.info("Database connected!")
+            
+            # Initialize permanent database
+            await self.permanent_db.connect()
+            logger.info("Permanent database connected!")
+            
+            # Start scheduler for subscription checks
+            await self.scheduler.start()
+            logger.info("Scheduler started!")
+            
+            # Register handlers
+            self.register_handlers()
+            
+            # Keep the bot running
+            print("Bot is running... Press Ctrl+C to stop.")
+            while True:
+                await asyncio.sleep(1)
                 
-                # Initialize database
-                await self.db.connect()
-                logger.info("Database connected!")
-                
-                # Initialize permanent database
-                await self.permanent_db.connect()
-                logger.info("Permanent database connected!")
-                
-                # Start scheduler for subscription checks
-                await self.scheduler.start()
-                logger.info("Scheduler started!")
-                
-                # Register handlers
-                self.register_handlers()
-                
-                # Keep the bot running
-                print("Bot is running... Press Ctrl+C to stop.")
-                while True:
-                    await asyncio.sleep(1)
-                    
-            except Exception as e:
-                logger.error(f"Error starting bot (attempt {attempt + 1}/{retries}): {e}")
-                if attempt < retries - 1:
-                    logger.info(f"Retrying in 5 seconds...")
-                    await asyncio.sleep(5)
-                else:
-                    logger.error("Max retries reached. Bot startup failed.")
-                    break
-        
-        await self.cleanup()
+        except Exception as e:
+            logger.error(f"Error starting bot: {e}")
+            await self.cleanup()
+            raise
     
     def register_handlers(self):
         """Register all message and callback handlers"""
