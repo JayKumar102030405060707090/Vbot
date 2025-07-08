@@ -9,7 +9,7 @@ class Config:
     
     # Owner and channels
     OWNER_USERNAME = os.getenv("OWNER_USERNAME", "@INNOCENT_FUCKER")
-    OWNER_ID = int(os.getenv("OWNER_ID", "7840521426"))
+    OWNER_ID = int(os.getenv("OWNER_ID", "7840521426"))  # Replace with actual owner ID
     SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "@Komal_Music_Support")
     UPDATE_CHANNEL = os.getenv("UPDATE_CHANNEL", "@KomalMusicUpdate")
     

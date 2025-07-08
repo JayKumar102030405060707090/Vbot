@@ -86,8 +86,9 @@ class VoteBot:
         verify_handler = VerifyHandler(self.app, self.db)
         admin_handler = AdminHandler(self.app, self.db)
         force_subscribe_handler = ForceSubscribeHandler(self.app, self.db)
-        from handlers.broadcast import BroadcastHandler
-        broadcast_handler = BroadcastHandler(self.app, self.db)
+        from handlers.broadcast_advanced import AdvancedBroadcastHandler, ServedTracker
+        broadcast_handler = AdvancedBroadcastHandler(self.app, self.db)
+        served_tracker = ServedTracker(broadcast_handler)
         
         # Register handlers (force subscribe first to catch all messages)
         force_subscribe_handler.register()
@@ -96,6 +97,7 @@ class VoteBot:
         verify_handler.register()
         admin_handler.register()
         broadcast_handler.register()
+        served_tracker.register_middleware(self.app)
         
         logger.info("All handlers registered successfully!")
     
