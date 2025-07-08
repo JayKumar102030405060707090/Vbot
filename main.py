@@ -5,7 +5,8 @@ from pyrogram.errors import FloodWait
 from config import Config
 from utils.db import Database
 from utils.scheduler import VoteScheduler
-from handlers import start, vote, verify, admin
+from handlers import start, vote, verify, admin, broadcast
+from database import permanent_db
 
 # Configure logging
 logging.basicConfig(
@@ -24,6 +25,7 @@ class VoteBot:
     sleep_threshold=60
         )
         self.db = Database()
+        self.permanent_db = permanent_db
         self.scheduler = VoteScheduler(self.app, self.db)
         
     async def start_bot(self):
@@ -41,6 +43,10 @@ class VoteBot:
                 # Initialize database
                 await self.db.connect()
                 logger.info("Database connected!")
+                
+                # Initialize permanent database
+                await self.permanent_db.connect()
+                logger.info("Permanent database connected!")
                 
                 # Start scheduler for subscription checks
                 await self.scheduler.start()
@@ -80,6 +86,8 @@ class VoteBot:
         verify_handler = VerifyHandler(self.app, self.db)
         admin_handler = AdminHandler(self.app, self.db)
         force_subscribe_handler = ForceSubscribeHandler(self.app, self.db)
+        from handlers.broadcast import BroadcastHandler
+        broadcast_handler = BroadcastHandler(self.app, self.db)
         
         # Register handlers (force subscribe first to catch all messages)
         force_subscribe_handler.register()
@@ -87,6 +95,7 @@ class VoteBot:
         vote_handler.register()
         verify_handler.register()
         admin_handler.register()
+        broadcast_handler.register()
         
         logger.info("All handlers registered successfully!")
     

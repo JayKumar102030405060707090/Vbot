@@ -251,6 +251,17 @@ Changelog:
   - Database connection established and scheduler running
   - Production-ready deployment with proper security practices
   - Migration completed successfully with all features functional
+- July 8, 2025: Implemented Permanent User and Channel Storage System
+  - Created comprehensive permanent database system using MongoDB for broadcasting
+  - Added automatic user saving on every /start command with complete user data
+  - Implemented channel saving when vote polls are created with channel information
+  - Built complete broadcasting system for users and channels
+  - Added broadcast handler with owner-only access and detailed statistics
+  - Created permanent_users and permanent_channels collections with proper indexing
+  - Integrated broadcast logging for tracking sent messages and success rates
+  - Broadcasting supports text messages with flood protection and error handling
+  - Database statistics show real-time counts of stored users and channels
+  - Complete broadcasting infrastructure ready for production use
 ```
 
 ## User Preferences

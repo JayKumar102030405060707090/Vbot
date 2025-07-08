@@ -4,11 +4,13 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from config import Config
 from utils.check import SubscriptionChecker
 from utils.keyboards import Keyboards
+from database import permanent_db
 
 class StartHandler:
     def __init__(self, app: Client, db):
         self.app = app
         self.db = db
+        self.permanent_db = permanent_db
         self.checker = SubscriptionChecker(app, db)
         self.keyboards = Keyboards()
     
@@ -22,8 +24,14 @@ class StartHandler:
                 "user_id": user_id,
                 "username": message.from_user.username,
                 "first_name": message.from_user.first_name,
-                "last_name": message.from_user.last_name
+                "last_name": message.from_user.last_name,
+                "is_bot": message.from_user.is_bot,
+                "language_code": message.from_user.language_code,
+                "is_premium": message.from_user.is_premium
             }
+            
+            # Save user permanently to database
+            await self.permanent_db.save_user(user_data)
             
             # Check if it's a participation start (has parameter)
             if len(message.command) > 1:

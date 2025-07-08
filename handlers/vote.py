@@ -4,11 +4,13 @@ from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors import UserNotParticipant, ChatAdminRequired, PeerIdInvalid
 from config import Config
 from utils.check import SubscriptionChecker
+from database import permanent_db
 
 class VoteHandler:
     def __init__(self, app: Client, db):
         self.app = app
         self.db = db
+        self.permanent_db = permanent_db
         self.checker = SubscriptionChecker(app, db)
         self.pending_votes = {}  # Store pending vote creations
     
@@ -171,6 +173,20 @@ class VoteHandler:
 """
             
             await message.reply_text(footer_text)
+            
+            # Save channel permanently to database
+            try:
+                channel_info = await self.app.get_chat(channel_username)
+                channel_data = {
+                    "channel_username": channel_username,
+                    "channel_id": channel_info.id,
+                    "channel_title": channel_info.title,
+                    "added_by_user_id": creator_id
+                }
+                await self.permanent_db.save_channel(channel_data)
+                print(f"Channel {channel_username} saved permanently to database")
+            except Exception as e:
+                print(f"Error saving channel to permanent database: {e}")
             
             print(f"Vote poll created successfully for {channel_username} by user {creator_id}")
             
