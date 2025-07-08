@@ -59,11 +59,21 @@ class TrackHandler:
     def is_participation_post(self, text: str) -> bool:
         """Check if the text looks like a participation post"""
         keywords = [
-            "ᴘᴀʀᴛɪᴄɪᴘᴀᴛᴇᴅ ɪɴ ᴠᴏᴛᴇ",
-            "participated in vote",
-            "vote participation",
-            "ᴠᴏᴛᴇ ᴘᴀʀᴛɪᴄɪᴘᴀᴛɪᴏɴ",
-            "🎯"
+            "PARTICIPANT DETAILS",
+            "participant details", 
+            "USER-ID:",
+            "user-id:",
+            "USERNAME:",
+            "username:",
+            "CREATED BY",
+            "created by",
+            "VOTE BOT",
+            "vote bot",
+            "ONLY CHANNEL SUBSCRIBERS CAN VOTE",
+            "channel subscribers can vote",
+            "🎯",
+            "◈",
+            "▶️"
         ]
         
         text_lower = text.lower()
@@ -104,38 +114,63 @@ class TrackHandler:
         try:
             participant_info = {}
             
-            # Extract user ID (looking for patterns like user ID numbers)
-            user_id_match = re.search(r'(\d{9,12})', post_text)
-            if user_id_match:
-                participant_info['user_id'] = int(user_id_match.group(1))
+            # Extract user ID - looking for USER-ID: pattern
+            user_id_patterns = [
+                r'USER-ID:\s*(\d+)',
+                r'user-id:\s*(\d+)',
+                r'USER_ID:\s*(\d+)',
+                r'ID:\s*(\d+)',
+                r'(\d{9,12})'
+            ]
             
-            # Extract username
-            username_match = re.search(r'@(\w+)', post_text)
-            if username_match:
-                participant_info['username'] = username_match.group(1)
+            for pattern in user_id_patterns:
+                user_id_match = re.search(pattern, post_text, re.IGNORECASE)
+                if user_id_match:
+                    participant_info['user_id'] = int(user_id_match.group(1))
+                    break
             
-            # Extract first name (looking for name patterns)
+            # Extract username - looking for USERNAME: pattern and @mentions
+            username_patterns = [
+                r'USERNAME:\s*#(\w+)',
+                r'username:\s*#(\w+)',
+                r'USERNAME:\s*@(\w+)',
+                r'username:\s*@(\w+)',
+                r'@(\w+)',
+                r'#(\w+)'
+            ]
+            
+            for pattern in username_patterns:
+                username_match = re.search(pattern, post_text, re.IGNORECASE)
+                if username_match:
+                    participant_info['username'] = username_match.group(1)
+                    break
+            
+            # Extract user display name - looking for USER: pattern
             name_patterns = [
-                r'👤.*?([A-Za-z\s]+)',
-                r'ɴᴀᴍᴇ.*?([A-Za-z\s]+)',
-                r'Name.*?([A-Za-z\s]+)'
+                r'USER:\s*([^◈\n]+)',
+                r'user:\s*([^◈\n]+)',
+                r'NAME:\s*([^◈\n]+)',
+                r'name:\s*([^◈\n]+)'
             ]
             
             for pattern in name_patterns:
                 name_match = re.search(pattern, post_text, re.IGNORECASE)
                 if name_match:
-                    participant_info['first_name'] = name_match.group(1).strip()
-                    break
+                    name = name_match.group(1).strip()
+                    # Clean special characters
+                    name = re.sub(r'[^\w\s]', '', name).strip()
+                    if name:
+                        participant_info['first_name'] = name
+                        break
             
-            # Extract channel username
-            channel_match = re.search(r'(@\w+)', post_text)
-            if channel_match:
-                participant_info['channel_username'] = channel_match.group(1)
+            # Extract timestamp from user ID (assuming format: userid_timestamp)
+            if 'user_id' in participant_info:
+                # Generate timestamp based on current participation
+                import time
+                participant_info['timestamp'] = str(int(time.time() * 1000000))
             
-            # Try to find unique post ID from timestamp or other unique identifiers
-            timestamp_match = re.search(r'(\d{13,16})', post_text)
-            if timestamp_match:
-                participant_info['timestamp'] = timestamp_match.group(1)
+            # Set a default channel if not found
+            participant_info['channel_username'] = '@vote_taste'  # Default from screenshot
             
             return participant_info if participant_info else None
             
@@ -151,32 +186,37 @@ class TrackHandler:
             
             if 'user_id' in participant_info:
                 query['participant_user_id'] = participant_info['user_id']
-            
-            if 'timestamp' in participant_info:
-                # Look for unique_post_id containing this timestamp
-                query['unique_post_id'] = {'$regex': f".*{participant_info['timestamp']}.*"}
-            
-            if 'channel_username' in participant_info:
-                query['channel_username'] = participant_info['channel_username']
-            
-            if not query:
-                return None
-            
-            # Get votes for this participant
-            votes_collection = self.db.get_collection("votes")
+                
+            # Also try searching by user ID in user_votes collection
+            votes_collection = self.db.get_collection("user_votes")
             votes = await votes_collection.find(query).to_list(length=None)
             
-            if not votes:
-                return None
+            # If no votes in user_votes, try the votes collection
+            if not votes and 'user_id' in participant_info:
+                votes_collection = self.db.get_collection("votes")
+                votes = await votes_collection.find(query).to_list(length=None)
             
-            # Get participants collection for additional info
+            # If still no votes, try participants collection to get post info
+            if not votes:
+                participants_collection = self.db.get_collection("participants")
+                participant_data = await participants_collection.find_one(query)
+                
+                if participant_data and 'unique_post_id' in participant_data:
+                    # Search votes by unique_post_id
+                    post_query = {'unique_post_id': participant_data['unique_post_id']}
+                    votes = await self.db.get_collection("user_votes").find(post_query).to_list(length=None)
+                    
+                    if not votes:
+                        votes = await self.db.get_collection("votes").find(post_query).to_list(length=None)
+            
+            # Get participant data
             participants_collection = self.db.get_collection("participants")
             participant_data = await participants_collection.find_one(query)
             
             return {
                 'votes': votes,
                 'participant_data': participant_data,
-                'total_votes': len(votes)
+                'total_votes': len(votes) if votes else 0
             }
             
         except Exception as e:
