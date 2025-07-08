@@ -377,6 +377,12 @@ class VerifyHandler:
             
             # Post to channel using channel username
             channel_username = vote_data.get("channel_username", "")
+            
+            # Validate channel username before posting
+            if not channel_username or len(channel_username) < 2:
+                print(f"ERROR: Invalid channel username: '{channel_username}'")
+                return
+                
             print(f"DEBUG: Posting to channel: {channel_username}")
             
             # Create inline voting button for channel subscribers
@@ -391,12 +397,20 @@ class VerifyHandler:
             ])
             
             # Send message to channel with voting button
-            sent_message = await self.app.send_message(
-                chat_id=channel_username,
-                text=participation_message,
-                reply_markup=vote_button,
-                disable_web_page_preview=True
-            )
+            try:
+                sent_message = await self.app.send_message(
+                    chat_id=channel_username,
+                    text=participation_message,
+                    reply_markup=vote_button,
+                    disable_web_page_preview=True
+                )
+            except Exception as send_error:
+                if "USERNAME_NOT_OCCUPIED" in str(send_error):
+                    print(f"ERROR: Channel username '{channel_username}' is not valid or doesn't exist")
+                    return
+                else:
+                    print(f"Failed to send post to channel: {send_error}")
+                    return
             
             print(f"DEBUG: Message posted successfully to channel {channel_username}")
             print(f"DEBUG: Message ID: {sent_message.message_id}")
@@ -462,10 +476,18 @@ class VerifyHandler:
 💎 **Thank you for participating!**"""
             
             # Edit the original message to show success
-            await query.edit_message_text(
-                success_message,
-                disable_web_page_preview=True
-            )
+            try:
+                await query.edit_message_text(
+                    success_message,
+                    disable_web_page_preview=True
+                )
+            except Exception as edit_error:
+                # Handle MESSAGE_NOT_MODIFIED error
+                if "MESSAGE_NOT_MODIFIED" in str(edit_error):
+                    print("Message content was the same, skipping edit")
+                    await query.answer("✅ Successfully participated!", show_alert=True)
+                else:
+                    raise edit_error
             
         except Exception as e:
             print(f"Error sending participation success message: {e}")
