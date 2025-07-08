@@ -31,7 +31,8 @@ class VoteBot:
     async def start_bot(self):
         """Start the bot and initialize services"""
         try:
-            # Start bot client
+            # Start bot client with flood wait handling
+            logger.info("Starting bot client...")
             await self.app.start()
             logger.info("Bot started successfully!")
             
@@ -55,6 +56,11 @@ class VoteBot:
             while True:
                 await asyncio.sleep(1)
                 
+        except FloodWait as e:
+            logger.error(f"FloodWait error: Need to wait {e.value} seconds")
+            logger.info(f"Waiting for {e.value} seconds before retrying...")
+            await asyncio.sleep(e.value)
+            await self.start_bot()  # Retry after waiting
         except Exception as e:
             logger.error(f"Error starting bot: {e}")
             await self.cleanup()
