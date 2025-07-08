@@ -137,20 +137,20 @@ class VoteScheduler:
                             unique_post_id = vote.get("unique_post_id")
                             
                             if unique_post_id:
-                                # Decrement post vote count
-                                result = await self.db.db["participants"].update_one(
-                                    {
-                                        "channel_username": channel_username,
-                                        "unique_post_id": unique_post_id
-                                    },
-                                    {"$inc": {"post_vote_count": -1}}
-                                )
+                                # Remove the vote from user_votes collection
+                                await self.db.remove_user_vote(user_id, unique_post_id)
                                 
-                                if result.modified_count > 0:
-                                    print(f"Decremented vote count for post {unique_post_id}")
-                                    
-                                    # Update channel button
+                                # Get live count and update participant record
+                                live_count = await self.db.get_post_vote_count(unique_post_id)
+                                await self.db.update_post_vote_count(unique_post_id, live_count)
+                                
+                                print(f"Removed vote for user {user_id} from post {unique_post_id}, new count: {live_count}")
+                                
+                                # Update channel button
+                                try:
                                     await self.update_channel_vote_button_by_post_id(channel_username, unique_post_id)
+                                except Exception as button_error:
+                                    print(f"Error updating channel button: {button_error}")
                         
                         # Remove all votes from this user
                         delete_result = await self.db.db["user_votes"].delete_many({
@@ -171,7 +171,7 @@ class VoteScheduler:
         return removed_count
     
     async def remove_user_votes(self, unsubscribed_user_id: int, channel_username: str):
-        """Remove all votes cast by an unsubscribed user and decrement participant vote counts"""
+        """Remove all votes cast by an unsubscribed user and update participant vote counts"""
         try:
             # Find all votes cast by this user in this channel
             user_votes = await self.db.db["user_votes"].find({
@@ -182,72 +182,61 @@ class VoteScheduler:
             votes_removed = 0
             
             for vote in user_votes:
-                participant_user_id = vote["participant_user_id"]
                 unique_post_id = vote.get("unique_post_id")
                 
                 if unique_post_id:
-                    # Decrement the vote count for this specific post
-                    result = await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
-                        {
-                            "channel_username": channel_username,
-                            "unique_post_id": unique_post_id
-                        },
-                        {"$inc": {"post_vote_count": -1}}
-                    )
-                    
-                    if result.modified_count > 0:
+                    # Remove the vote using database function
+                    if await self.db.remove_user_vote(unsubscribed_user_id, unique_post_id):
                         votes_removed += 1
-                        print(f"Removed vote from user {unsubscribed_user_id} for post {unique_post_id}")
                         
-                        # Update the channel message button with new vote count
+                        # Get live count and update participant record
+                        live_count = await self.db.get_post_vote_count(unique_post_id)
+                        await self.db.update_post_vote_count(unique_post_id, live_count)
+                        
+                        print(f"Removed vote from user {unsubscribed_user_id} for post {unique_post_id}, new count: {live_count}")
+                        
+                        # Update the channel message button with live count
                         await self.update_channel_vote_button_by_post_id(channel_username, unique_post_id)
                 else:
                     # Fallback for old votes without unique_post_id
-                    result = await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
-                        {
-                            "channel_username": channel_username,
-                            "user_id": participant_user_id
-                        },
-                        {"$inc": {"vote_count": -1}}
-                    )
-                    
-                    if result.modified_count > 0:
-                        votes_removed += 1
-                        print(f"Removed vote from user {unsubscribed_user_id} for participant {participant_user_id} (legacy)")
+                    participant_user_id = vote.get("participant_user_id")
+                    if participant_user_id:
+                        result = await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
+                            {
+                                "channel_username": channel_username,
+                                "user_id": participant_user_id
+                            },
+                            {"$inc": {"vote_count": -1}}
+                        )
                         
-                        # Update the channel message button with new vote count
-                        await self.update_channel_vote_button(channel_username, participant_user_id)
-            
-            # Remove all vote records for this user in this channel
-            delete_result = await self.db.db["user_votes"].delete_many({
-                "voter_id": unsubscribed_user_id,
-                "channel_username": channel_username
-            })
+                        if result.modified_count > 0:
+                            votes_removed += 1
+                            print(f"Removed vote from user {unsubscribed_user_id} for participant {participant_user_id} (legacy)")
+                            
+                            # Update the channel message button with new vote count
+                            await self.update_channel_vote_button(channel_username, participant_user_id)
             
             print(f"Removed {votes_removed} votes from unsubscribed user {unsubscribed_user_id} in {channel_username}")
-            print(f"Deleted {delete_result.deleted_count} vote records from database")
             
         except Exception as e:
             print(f"Error removing votes for unsubscribed user {unsubscribed_user_id}: {e}")
     
     async def update_channel_vote_button_by_post_id(self, channel_username: str, unique_post_id: str):
-        """Update the vote button in channel message with new count using unique post ID"""
+        """Update the vote button in channel message with live count using unique post ID"""
         try:
-            # Get updated participant data by unique_post_id
-            participant_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one({
-                "channel_username": channel_username,
-                "unique_post_id": unique_post_id
-            })
+            # Get participant data using database function
+            participant_data = await self.db.get_participant_by_post_id(unique_post_id)
             
             if participant_data and participant_data.get("channel_message_id"):
-                new_count = participant_data.get("post_vote_count", 0)
+                # Get live count from user_votes collection
+                live_count = await self.db.get_post_vote_count(unique_post_id)
                 emoji = "⚡"
                 
                 # Create updated button
                 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
                 channel_name = channel_username[1:]  # Remove @ prefix
                 updated_button = InlineKeyboardMarkup([
-                    [InlineKeyboardButton(f"{emoji} Vote for this participant ({new_count})", callback_data=f"channel_vote_{channel_name}_{unique_post_id}")]
+                    [InlineKeyboardButton(f"{emoji} Vote for this participant ({live_count})", callback_data=f"channel_vote_{channel_name}_{unique_post_id}")]
                 ])
                 
                 # Update the message
@@ -257,7 +246,7 @@ class VoteScheduler:
                     reply_markup=updated_button
                 )
                 
-                print(f"Updated channel vote button for post {unique_post_id} with count {new_count}")
+                print(f"Updated channel vote button for post {unique_post_id} with live count {live_count}")
                 
         except Exception as e:
             print(f"Error updating channel vote button by post ID: {e}")

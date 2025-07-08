@@ -108,6 +108,43 @@ class Database:
         vote_obj_id = ObjectId(vote_id)
         return await self.db[Config.PARTICIPANTS_COLLECTION].count_documents({"vote_id": vote_obj_id})
     
+    # Individual vote operations for proper vote management
+    async def add_user_vote(self, vote_data: Dict) -> str:
+        """Add a user vote for a specific participant post"""
+        result = await self.db["user_votes"].insert_one(vote_data)
+        return str(result.inserted_id)
+    
+    async def get_user_vote_on_post(self, voter_id: int, unique_post_id: str) -> Optional[Dict]:
+        """Check if user already voted on a specific participant post"""
+        return await self.db["user_votes"].find_one({
+            "voter_id": voter_id,
+            "unique_post_id": unique_post_id
+        })
+    
+    async def remove_user_vote(self, voter_id: int, unique_post_id: str) -> bool:
+        """Remove user vote from a specific post"""
+        result = await self.db["user_votes"].delete_one({
+            "voter_id": voter_id,
+            "unique_post_id": unique_post_id
+        })
+        return result.deleted_count > 0
+    
+    async def get_post_vote_count(self, unique_post_id: str) -> int:
+        """Get vote count for a specific participant post"""
+        return await self.db["user_votes"].count_documents({"unique_post_id": unique_post_id})
+    
+    async def update_post_vote_count(self, unique_post_id: str, new_count: int) -> bool:
+        """Update the stored vote count for a participant post"""
+        result = await self.db[Config.PARTICIPANTS_COLLECTION].update_one(
+            {"unique_post_id": unique_post_id},
+            {"$set": {"post_vote_count": new_count}}
+        )
+        return result.modified_count > 0
+    
+    async def get_participant_by_post_id(self, unique_post_id: str) -> Optional[Dict]:
+        """Get participant details by unique post ID"""
+        return await self.db[Config.PARTICIPANTS_COLLECTION].find_one({"unique_post_id": unique_post_id})
+    
     async def get_vote_participants(self, vote_id: str) -> List[Dict]:
         """Get all participants for a vote"""
         vote_obj_id = ObjectId(vote_id)

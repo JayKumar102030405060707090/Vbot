@@ -74,17 +74,16 @@ class VerifyHandler:
                     voter_id = query.from_user.id
                     channel_username = f"@{channel_name}"
                     
-                    # Verify subscription
-                    is_subscribed = await self.app.get_chat_member(channel_username, voter_id)
-                    if is_subscribed.status in ["creator", "administrator", "member"]:
+                    # Verify subscription to all required channels
+                    subscription_status = await self.checker.check_all_subscriptions(
+                        voter_id, [Config.SUPPORT_CHANNEL, Config.UPDATE_CHANNEL, channel_username]
+                    )
+                    
+                    if subscription_status["all_subscribed"]:
                         
                         # Check if user has already voted for this specific participant post
                         print(f"DEBUG: Checking vote - Voter: {voter_id}, Participant: {participant_user_id}, Post ID: {unique_post_id}, Channel: {channel_username}")
-                        existing_vote = await self.db.db["user_votes"].find_one({
-                            "voter_id": voter_id,
-                            "unique_post_id": unique_post_id,
-                            "channel_username": channel_username
-                        })
+                        existing_vote = await self.db.get_user_vote_on_post(voter_id, unique_post_id)
                         print(f"DEBUG: Existing vote found: {existing_vote}")
                         
                         if existing_vote:
@@ -104,14 +103,12 @@ class VerifyHandler:
                                 "channel_username": channel_username,
                                 "vote_timestamp": datetime.now()
                             }
-                            await self.db.db["user_votes"].insert_one(vote_record)
+                            await self.db.add_user_vote(vote_record)
                             print(f"DEBUG: Vote recorded: {vote_record}")
                             
                             # Update vote count for this specific post
-                            await self.db.db[Config.PARTICIPANTS_COLLECTION].update_one(
-                                {"channel_username": channel_username, "unique_post_id": unique_post_id},
-                                {"$inc": {"post_vote_count": 1}}
-                            )
+                            new_count = await self.db.get_post_vote_count(unique_post_id)
+                            await self.db.update_post_vote_count(unique_post_id, new_count)
                             
                             # Update button text with new count for this specific post
                             participant_data = await self.db.db[Config.PARTICIPANTS_COLLECTION].find_one(
@@ -145,8 +142,9 @@ class VerifyHandler:
                                     except Exception as e2:
                                         print(f"DEBUG: Error updating channel message: {e2}")
                     else:
-                        # Not subscribed
-                        await query.answer("**❌ ʏᴏᴜ ᴍᴜsᴛ ʙᴇ sᴜʙsᴄʀɪʙᴇᴅ ᴛᴏ ᴛʜɪs ᴄʜᴀɴɴᴇʟ ᴛᴏ ᴠᴏᴛᴇ! ❖**", show_alert=True)
+                        # Not subscribed to required channels
+                        missing_channels = subscription_status.get("missing_channels", [])
+                        await query.answer(f"**❌ ʏᴏᴜ ᴍᴜsᴛ sᴜʙsᴄʀɪʙᴇ ᴛᴏ ᴀʟʟ ʀᴇǫᴜɪʀᴇᴅ ᴄʜᴀɴɴᴇʟs: {', '.join(missing_channels)} ❖**", show_alert=True)
                 else:
                     await query.answer("**❌ ɪɴᴠᴀʟɪᴅ ᴠᴏᴛᴇ ᴅᴀᴛᴀ! ❖**", show_alert=True)
                     
