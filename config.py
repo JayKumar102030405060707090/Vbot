@@ -5,7 +5,7 @@ class Config:
     # Bot configuration
     API_ID = int(os.getenv("API_ID", "12380656"))
     API_HASH = os.getenv("API_HASH", "d927c13beaaf5110f25c505b7c071273")
-    BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_NEW_BOT_TOKEN_HERE")
+    BOT_TOKEN = os.getenv("BOT_TOKEN", "7745907443:AAE5yUnznFdtHnvf3ZCaS4vwbLVIIC-hnDY")
     
     # Owner and channels
     OWNER_USERNAME = os.getenv("OWNER_USERNAME", "@INNOCENT_FUCKER")
